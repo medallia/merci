@@ -1,0 +1,61 @@
+/*
+ * Copyright 2018 Medallia, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+
+ *     http://www.apache.org/licenses/LICENSE-2.0
+
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.medallia.merci.core;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
+import com.medallia.merci.core.configs.NumberConfig;
+import com.medallia.merci.core.structure.Context;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.util.Map;
+
+/**
+ * Unit tests for {@link ConfigurationWriter}.
+ */
+public class ConfigurationWriterTest {
+
+    private static final String CONFIG_NAME = "com.medallia.merci.core.configs.NumberConfig";
+
+    private static final  String SINGLE_VALUE_CONFIGS_JSON = "{\n  \"configs\" : {\n" +
+            "    \"com.medallia.merci.core.configs.NumberConfig\" : {\n      \"value\" : {\n        \"number\" : 1\n      }\n    }\n  }\n}";
+
+    private static final String EMPTY_CONFIGS_JSON = "{\n  \"configs\" : { }\n}";
+
+    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final ConfigurationWriter<Object> jsonConfigurationWriter = new ConfigurationWriter<>("configs", jsonMapper);
+
+    @SuppressWarnings("unchecked")
+    private final Map<String, Configuration<Object>> singleValueConfigs = ImmutableMap.of(
+            CONFIG_NAME, new Configuration(CONFIG_NAME, new Context<>(
+                    new NumberConfig(1), null)));
+
+    private final Map<String, Configuration<Object>> emptyValueConfigs = ImmutableMap.of();
+
+    @Test
+    public void testWriteValueAsStringReturnsCorrectJson() throws IOException {
+        String configsAsJson = jsonConfigurationWriter.writeValueAsString(singleValueConfigs);
+        Assert.assertEquals(SINGLE_VALUE_CONFIGS_JSON, configsAsJson);
+    }
+
+    @Test
+    public void testWriteValueAsStringForEmptyConfigurationsMapReturnsCorrectJson() throws IOException {
+        String configsAsJson = jsonConfigurationWriter.writeValueAsString(emptyValueConfigs);
+        Assert.assertEquals(EMPTY_CONFIGS_JSON, configsAsJson);
+    }
+}

@@ -1,0 +1,24 @@
+---
+feature-flags:
+  enable-feature-all:
+    # Value for feature flag enable-feature-all is always true.
+    value: true
+  enable-feature-none:
+    # Value for feature flag enable-feature-none is always false.
+    value: false
+  enable-feature-one:
+    # Value for feature flag enable-feature-one is only true for user joe in QA.
+    value: false
+    modifiers:
+      type: environment
+      contexts:
+        qa:
+          # Value is true only for user joe.
+          value: false
+          modifiers:
+            type: user
+            contexts:
+              joe:
+                value: true
+        prod:
+          value: false

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2018 Medallia, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.2//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+<module name="Checker">
+    <!-- Checks are by default set to a severity-level of error -->
+    <property name="severity" value="error"/>
+    <property name="charset" value="UTF-8"/>
+    <module name="TreeWalker">
+        <module name="AvoidStarImport" />
+        <module name="IllegalImport" />
+        <module name="MissingSwitchDefault" />
+        <module name="RedundantImport" />
+        <module name="UnusedImports">
+            <property name="processJavadoc" value="true"/>
+        </module>
+        <module name="LineLength">
+            <property name="max" value="200" />
+        </module>
+    </module>
+    <module name="RegexpSingleline">
+        <property name="format" value="Thread.sleep"/>
+        <property name="message" value="Don’t sleep."/>
+    </module>
+</module>

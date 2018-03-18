@@ -1,0 +1,61 @@
+{
+  "configs": {
+    "com.medallia.merci.core.configs.JsonOnlyTeamConfig": {
+      "value": {
+        "zip" : 94402,
+        "dashboard": "Team Tiger"
+      }
+    },
+    "com.medallia.merci.core.configs.XJConfig": {
+      "comment" : "At runtime, the default value should never be used.",
+      "value": {
+        "hosts": ["invalid-host"],
+        "port": -1,
+        "timeoutSeconds": -1,
+        "description": "Invalid default config."
+      },
+      "modifiers": {
+        "type": "environment",
+        "contexts": {
+          "qa": {
+            "comment" : "One cluster of hosts for all of QA.",
+            "value": {
+              "hosts": ["xj2001"],
+              "port": 4554,
+              "timeoutSeconds": 60,
+              "description": "Environment is QA"
+            },
+            "modifiers": {
+              "type": "cluster",
+              "contexts": {
+                "cem341": {
+                  "comment" : "Temporarily testing some special code.",
+                  "value": {
+                    "hosts": ["xj9012"],
+                    "port": 4554,
+                    "timeoutSeconds": 10,
+                    "description": "Environment is QA and cluster is cem341."
+                  }
+                }
+              }
+            }
+          },
+          "prod": {
+            "value": {
+              "hosts": ["xj1001", "xj1002"],
+              "port": 4554,
+              "timeoutSeconds": 60,
+              "description": "Environment is Production."
+            }
+          }
+        }
+      }
+    },
+    "com.medallia.merci.core.configs.BadConfig": {
+      "comment" : "This JSON cannot be deserialized since BadConfig is an abstract class.",
+      "value": {
+        "timeoutSeconds" : 60
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+---
+configs:
+  com.medallia.merci.core.configs.JsonOnlyTeamConfig:
+    value:
+      zip: 94402
+      team: "Team Tiger"
+  com.medallia.merci.core.configs.XJConfig:
+    # At runtime, the default value should never be used.
+    value:
+      hosts:
+      - "invalid-host"
+      port: -1
+      timeoutSeconds: -1
+      description: "Invalid default config."
+    modifiers:
+      type: environment
+      contexts:
+        qa:
+          # One cluster for all of QA.
+          value:
+            hosts:
+            - "xj2001"
+            port: 4554
+            timeoutSeconds: 60
+            description: "Environment is QA."
+          modifiers:
+            type: cluster
+            contexts:
+              cem341:
+                # Temporarily testing some special code.
+                value:
+                  hosts:
+                  - "xj9012"
+                  port: 4554
+                  timeoutSeconds: 10
+                  description: "Environment is QA and cluster is cem341."
+        prod:
+          value:
+            hosts:
+            - "xj1001"
+            - "xj1002"
+            port: 4554
+            timeoutSeconds: 60
+            description: "Environment is Production."
