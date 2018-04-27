@@ -17,8 +17,8 @@ package com.medallia.merci.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.medallia.merci.core.metrics.ConfigurationLoaderMetrics;
 import com.medallia.merci.core.fetcher.ConfigurationFetcher;
+import com.medallia.merci.core.metrics.ConfigurationLoaderMetrics;
 import com.medallia.merci.core.metrics.FeatureFlagMetrics;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,8 +31,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link ConfigurationLoader}.
@@ -135,6 +140,44 @@ public class ConfigurationLoaderTest {
         runnableCaptor.getValue().run();
         Mockito.doThrow(InterruptedException.class).when(executorService).awaitTermination(Matchers.anyLong(), Matchers.any(TimeUnit.class));
         configLoader.shutdown();
+    }
+
+    /**
+     * Tests the {@link ConfigurationLoader#waitUntilInitialConfigLoadComplete()} method works as expected.
+     */
+    @Test
+    public void testWaitUntilInitialConfigLoadComplete() throws InterruptedException {
+        // Setup config loader to load some dummy config
+        final ConfigurationFetcher configurationFetcher = (fileNames, application) -> ImmutableMap.of(
+                "com/medallia/merci/core/configs/featureflags.json",
+                "{ \"feature-flags\": { \"enable-all\": { \"value\": true } } }"
+        );
+        final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(0);
+        final ConfigurationReader<Boolean> featureFlagReader = new ConfigurationReader<>(
+                "myapp-configurations", Collections.singletonList("/featureflags.json"),
+                configurationFetcher, featureFlagMapper, featureFlagManager, digest, featureFlagMetrics,
+                0);
+        final ConfigurationLoader configLoader = new ConfigurationLoader(
+                configLoaderMetrics, Collections.singletonList(featureFlagReader),
+                executorService, Duration.ofSeconds(1));
+
+        // Before starting config loader, the "initial config load complete" flag is false
+        assertFalse(configLoader.isInitialConfigLoadComplete());
+
+        // Start the config loader
+        configLoader.start();
+
+        // Wait for initial config load to complete
+        configLoader.waitUntilInitialConfigLoadComplete();
+
+        // Now the wait is up, the "initial config load complete" flag will be true
+        assertTrue(configLoader.isInitialConfigLoadComplete());
+
+        // Clean up after ourselves: shut down the config loader
+        configLoader.shutdown();
+
+        // Clean up after ourselves: shut down the executorService
+        executorService.shutdown();
     }
 
     private static MessageDigest createMessageDigest() {

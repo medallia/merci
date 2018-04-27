@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Configuration loader, that uses an executor service to asynchronously fetch, parse and store in-memory configurations.
@@ -40,15 +41,7 @@ public final class ConfigurationLoader {
     private final ScheduledExecutorService executorService;
     private final ConfigurationLoaderMetrics metrics;
     private final Duration refreshInterval;
-
-
-    /*
-     * Constructs Configuration loader based on provided configs properties, HTTP client, executor service.
-     *
-     * @param configurationUpdates list of configuration updates
-     * @param executorService executor service
-
-     */
+    private final AtomicBoolean initialConfigLoadComplete = new AtomicBoolean();
 
     /**
      * Constructs Configuration loader based on provided metrics, configuration read (tasks) and an executor service.
@@ -69,12 +62,53 @@ public final class ConfigurationLoader {
     }
 
     /**
+     * Has the initial configuration load been completed? The initial configuration load is considered to be
+     * completed when an attempt has been made to read from each of the configured config readers. Note that the
+     * initial configuration load is marked as complete even if one or more of those configured config readers failed
+     * to load. The purpose of this flag is to prevent race conditions at startup (when we attempt to act on the
+     * config before it is first loaded), not to deal with scenarios when the config load fails (e.g. due to
+     * intermittent downtime in some remote server from which we are downloading the config.)
+     *
+     * @return true if initial configuration load been completed
+     */
+    public boolean isInitialConfigLoadComplete() {
+        return initialConfigLoadComplete.get();
+    }
+
+    /**
+     * Causes this thread to wait until the initial configuration load has been completed. Be careful that the
+     * thread from which you call this method on has no role to play in the configuration loading process, otherwise
+     * a deadlock may result.
+     *
+     * @throws InterruptedException if this thread is interrupted while waiting.
+     */
+    public void waitUntilInitialConfigLoadComplete() throws InterruptedException {
+        synchronized (initialConfigLoadComplete) {
+            while (true) {
+                if (initialConfigLoadComplete.get())
+                    return;
+                initialConfigLoadComplete.wait();
+            }
+        }
+    }
+
+    /**
+     * Mark the initial config load as having completed. Also notifies any threads which are waiting on its completion.
+     */
+    private void setInitialConfigLoadComplete() {
+        synchronized (initialConfigLoadComplete) {
+            initialConfigLoadComplete.set(true);
+            initialConfigLoadComplete.notifyAll();
+        }
+    }
+
+    /**
      * Start periodic refresh of configurations by scheduling executor task to call execute method on fixed schedule basis.
      */
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public void start() {
-        for(ConfigurationReader configurationReader: configurationReaders) {
-            executorService.scheduleWithFixedDelay(() -> {
+        executorService.scheduleWithFixedDelay(() -> {
+            for(ConfigurationReader configurationReader: configurationReaders) {
                 try {
                     metrics.incrementConfigurationRequests();
                     configurationReader.execute();
@@ -86,8 +120,9 @@ public final class ConfigurationLoader {
                     metrics.incrementConfigurationFailures();
                     log.error("Skipped updating configurations due to exception ", exception);
                 }
-            }, INITIAL_DELAY.getSeconds(), refreshInterval.getSeconds(), TimeUnit.SECONDS);
-        }
+            }
+            setInitialConfigLoadComplete();
+        }, INITIAL_DELAY.getSeconds(), refreshInterval.getSeconds(), TimeUnit.SECONDS);
     }
 
     /**
