@@ -203,7 +203,7 @@ public class MerciTest {
         Mockito.verify(executorService, Mockito.times(2)).scheduleWithFixedDelay(runnableCaptor.capture(), Matchers.anyLong(), Matchers.anyLong(), Matchers.any(TimeUnit.class));
         runnableCaptor.getAllValues().get(0).run();
         runnableCaptor.getAllValues().get(1).run();
-        Assert.assertEquals(0, configurationLoaderMetrics.getConfigurationFailures());
+        Assert.assertEquals(1, configurationLoaderMetrics.getConfigurationFailures());
         Assert.assertEquals(2, configurationLoaderMetrics.getConfigurationRequests());
         Assert.assertEquals(ImmutableList.of("enable-all", "enable-none"), featureFlagManager.getConfigurationNames());
         Assert.assertEquals(Collections.emptyList(), configManager.getConfigurationNames());
