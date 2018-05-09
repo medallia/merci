@@ -56,7 +56,7 @@ public class ConfigurationReader<T> {
     private byte[] previousHash;
 
     /**
-     * Creates configuration read.
+     * Creates configuration reader.
      *
      * @param application application
      * @param fileNames names of textual configuration files
@@ -105,7 +105,12 @@ public class ConfigurationReader<T> {
         }
     }
 
-    private void updateConfigurationManager(Map<String, String> contents) {
+    /**
+     * Update configuration manager with configurations from provided map.
+     *
+     * @throws IOException in case of a problem parsing configuration content
+     */
+    private void updateConfigurationManager(Map<String, String> contents) throws IOException {
         int numConfigurations = 0;
         int numContentFailures = 0;
         Map<String, Configuration<T>> configurationCache = new LinkedHashMap<> ();
@@ -119,6 +124,9 @@ public class ConfigurationReader<T> {
             }
         }
         metrics.incrementContentFailures(numContentFailures);
+        if (numContentFailures > 0) {
+            throw new IOException("Bad configuration content.");
+        }
         metrics.incrementNameDuplicates(numConfigurations - configurationCache.size());
         metrics.incrementUpdates(configurationCache.size());
         manager.updateConfigurations(configurationCache);

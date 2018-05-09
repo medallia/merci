@@ -60,7 +60,7 @@ public class ConfigurationReaderTest {
             "  \"feature-flags\": {\n" +
             "    \"enable-feature-none\": {\n" +
             "      \"values\": false\n" +
-            "    }\n" +
+            "    },\n" +
             "  }\n" +
             "}";
 
@@ -149,8 +149,8 @@ public class ConfigurationReaderTest {
         Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagNameDuplicates());
     }
 
-    @Test
-    public void testIO() throws IOException {
+    @Test(expected = IOException.class)
+    public void testBadFeatureFlagConfigurationContentResultsInIOException() throws IOException {
         ConfigurationFetcher configurationFetcher = (fileNames, application) ->
                 ImmutableMap.of(FIRST_FILE, FIRST_JSON, SECOND_FILE, BAD_SECOND_JSON);
 
@@ -159,19 +159,23 @@ public class ConfigurationReaderTest {
         ConfigurationReader<Boolean> configurationReader = new ConfigurationReader<>(APPLICATION, ImmutableList.of(FIRST_FILE, SECOND_FILE),
                 configurationFetcher, featureFlagMapper, featureFlagManager, digest, featureFlagMetrics, 0);
 
-        configurationReader.execute();
-
-        Assert.assertEquals(ImmutableList.of("enable-feature-all"), featureFlagManager.getConfigurationNames());
-        Assert.assertTrue(featureFlagManager.isActive("enable-feature-all", qa));
-        Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagSameContentsSkips());
-        Assert.assertEquals(1, featureFlagMetrics.getFeatureFlagNewContentsUpdates());
-        Assert.assertEquals(1, featureFlagMetrics.getFeatureFlagUpdates());
-        Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagContentFailures());
-        Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagNameDuplicates());
+        try {
+            configurationReader.execute();
+        } catch (IOException exception) {
+            Assert.assertEquals(Collections.emptyList(), featureFlagManager.getConfigurationNames());
+            Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagSameContentsSkips());
+            Assert.assertEquals(1, featureFlagMetrics.getFeatureFlagNewContentsUpdates());
+            Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagUpdates());
+            Assert.assertEquals(1, featureFlagMetrics.getFeatureFlagContentFailures());
+            Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagNameDuplicates());
+            Assert.assertFalse(featureFlagManager.isActive("enable-feature-all", qa));
+            throw exception;
+        }
+        Assert.fail("IOException should have been thrown.");
     }
 
-    @Test
-    public void test() throws IOException {
+    @Test(expected = IOException.class)
+    public void testMismatchConfigurationRootResultsInIOException() throws IOException {
         ConfigurationFetcher configurationFetcher = (fileNames, application) ->
                 ImmutableMap.of(FIRST_FILE, FIRST_JSON, SECOND_FILE, SECOND_JSON);
 
@@ -180,14 +184,18 @@ public class ConfigurationReaderTest {
         ConfigurationReader<Boolean> configurationReader = new ConfigurationReader<>(APPLICATION, ImmutableList.of(FIRST_FILE, SECOND_FILE),
                 configurationFetcher, featureFlagMapper, featureFlagManager, digest, featureFlagMetrics, 0);
 
-        configurationReader.execute();
-
-        Assert.assertEquals(Collections.emptyList(), featureFlagManager.getConfigurationNames());
-        Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagSameContentsSkips());
-        Assert.assertEquals(1, featureFlagMetrics.getFeatureFlagNewContentsUpdates());
-        Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagUpdates());
-        Assert.assertEquals(2, featureFlagMetrics.getFeatureFlagContentFailures());
-        Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagNameDuplicates());
+        try {
+            configurationReader.execute();
+        } catch (IOException exception) {
+            Assert.assertEquals(Collections.emptyList(), featureFlagManager.getConfigurationNames());
+            Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagSameContentsSkips());
+            Assert.assertEquals(1, featureFlagMetrics.getFeatureFlagNewContentsUpdates());
+            Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagUpdates());
+            Assert.assertEquals(2, featureFlagMetrics.getFeatureFlagContentFailures());
+            Assert.assertEquals(0, featureFlagMetrics.getFeatureFlagNameDuplicates());
+            throw exception;
+        }
+        Assert.fail("IOException should have been thrown.");
     }
 
     @Test
