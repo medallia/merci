@@ -57,10 +57,128 @@ dependencies {
     testCompile 'org.mockito:mockito-core:1.10.19'
 }
 
-task sourcesJar ( type: Jar, dependsOn: classes ) {
-    classifier 'sources'
+task sourceJar( type: Jar, dependsOn: classes ) {
+    classifier "sources"
     from sourceSets.main.allJava
 }
 
-build.dependsOn sourcesJar
+artifacts {
+    archives jar
+    archives sourceJar
+    archives distTar
+    archives distZip
+}
 
+signing {
+    sign configurations.archives
+}
+
+def sonatypeUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : System.getenv('sonatypeUsername')
+def sonatypePassword = project.hasProperty('sonatypePassword') ? sonatypePassword : System.getenv('sonatypePassword')
+
+publishing {
+    publications {
+        mavenWeb(MavenPublication) {
+            pom.withXml {
+                def root = asNode()
+
+                root.dependencies.removeAll { dep ->
+                    dep.scope == "test"
+                }
+
+                root.children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+
+                    description 'Framework for Feature Flags and Runtime Configuration'
+                    name 'Merci'
+                    url 'https://github.com/medallia/merci'
+                    organization {
+                        name 'com.github.medallia'
+                        url 'https://github.com/medallia'
+                    }
+                    issueManagement {
+                        system 'GitHub'
+                        url 'https://github.com/medallia/merci/issues'
+                    }
+                    licenses {
+                        license {
+                            name 'Apache License 2.0'
+                            url 'https://github.com/medallia/merci/blob/master/LICENSE'
+                            distribution 'repo'
+                        }
+                    }
+                    scm {
+                        url 'https://github.com/medallia/merci'
+                        connection 'scm:git:git://github.com/medallia/merci.git'
+                        developerConnection 'scm:git:ssh://git@github.com:medallia/merci.git'
+                    }
+                    developers {
+                        developer {
+                            name 'Mario H. Lichtsinn'
+                        }
+                    }
+                }
+            }
+
+            groupId 'com.medallia.merci'
+            artifactId 'merci-web'
+            version version
+            from components.java
+
+            pom.withXml {
+                def pomFile = file("${project.buildDir}/generated-pom.xml")
+                writeTo(pomFile)
+                def pomAscFile = signing.sign(pomFile).signatureFiles[0]
+                artifact(pomAscFile) {
+                    classifier = null
+                    extension = 'pom.asc'
+                }
+            }
+
+            artifact(sourceJar) {
+                classifier = 'sources'
+            }
+
+            artifact (distTar) {
+                classifier = null
+            }
+
+            artifact (distZip) {
+                classifier = null
+            }
+
+            project.tasks.signArchives.signatureFiles.each {
+                artifact(it) {
+                    def matcher = it.file =~ /-?(?<classifier>sources|javadoc)?\.(?<extension>jar|tar|zip)\.asc$/
+                    if (matcher.find()) {
+                        classifier = matcher.group('classifier')
+                        extension = matcher.group('extension') + '.asc'
+                        println classifier
+                        println extension
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username sonatypeUsername
+                password sonatypePassword
+            }
+        }
+    }
+
+    model {
+        tasks.generatePomFileForMavenWebPublication {
+            destination = file("$buildDir/generated-pom.xml")
+        }
+        tasks.publishMavenWebPublicationToMavenLocal {
+            dependsOn project.tasks.signArchives
+        }
+        tasks.publishMavenWebPublicationToMavenRepository {
+            dependsOn project.tasks.signArchives
+        }
+    }
+}

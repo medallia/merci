@@ -45,7 +45,12 @@ subprojects {
     apply plugin: 'checkstyle'
 
     apply plugin: 'com.diffplug.gradle.spotless'
+
+    // plugin to generate pom and publish it with artifacts to a repository, i.e. Maven Central
     apply plugin: 'maven-publish'
+
+    // plugin to sign pom and artifacts
+    apply plugin: 'signing'
 
     repositories {
         repositories {
