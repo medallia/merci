@@ -38,13 +38,6 @@ public class FilesystemConfigurationFetcher implements ConfigurationFetcher {
     private final String basePath;
     private final boolean skipMissingFiles;
     private final ConfigurationFetcherMetrics metrics;
-//    private final int i = 1; // FINDBUGS VIOLATION 'SS' (SS_SHOULD_BE_STATIC)
-//
-//    public Boolean returnNullBoolean() {
-//        String npNull = null;
-//        int len = npNull.length();
-//        return null;
-//    }
 
     /**
      * Creates a configuration fetcher for the local file system.
