@@ -98,7 +98,12 @@ subprojects {
 
     // CHECKSTLYE
     checkstyle {
+        toolVersion = "8.12"
         configFile = file("${project.rootDir}/checkstyle/checkstyle.xml")
+
+        dependencies {
+            checkstyle project(':checkstyle-checks')
+        }
     }
 
     // JACOCO

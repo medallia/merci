@@ -27,6 +27,7 @@ dependencies {
     // Common libraries
     compile 'commons-cli:commons-cli:20040117.000000'
     compile 'commons-configuration:commons-configuration:1.10'
+    compile 'com.google.code.findbugs:jsr305:3.0.1'
 
     // Servlet API
     compile 'javax.servlet:javax.servlet-api:3.1.0'
