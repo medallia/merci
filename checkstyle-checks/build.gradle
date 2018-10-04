@@ -19,23 +19,12 @@ ext {
 
 dependencies {
 
-    // Commons library
-    compile 'commons-io:commons-io:2.6'
-    compile 'com.google.code.findbugs:jsr305:3.0.1'
+    compile 'com.puppycrawl.tools:checkstyle:8.12'
 
     // SL4J for logging
     compile 'org.slf4j:slf4j-api:1.7.25'
 
-    // Jackson for JSON and YAML
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.4'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.9.4'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.9.4'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.4'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.4'
-    compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.4'
-
-    // Guava, JUnit and Mockito for unit tests
-    testCompile 'com.google.guava:guava:21.0'
+    // JUnit and Mockito for unit tests
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.10.19'
 }
@@ -62,9 +51,10 @@ signing {
 def sonatypeUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : System.getenv('sonatypeUsername')
 def sonatypePassword = project.hasProperty('sonatypePassword') ? sonatypePassword : System.getenv('sonatypePassword')
 
+
 publishing {
     publications {
-        mavenCore(MavenPublication) {
+        mavenCheckstyleChecks(MavenPublication) {
             pom.withXml {
                 def root = asNode()
 
@@ -109,7 +99,7 @@ publishing {
             }
 
             groupId 'com.medallia.merci'
-            artifactId 'merci-core'
+            artifactId 'checkstyle-checks'
             version version
             from components.java
 
@@ -149,15 +139,21 @@ publishing {
     }
 
     model {
-        tasks.generatePomFileForMavenCorePublication {
+        tasks.generatePomFileForMavenCheckstyleChecksPublication {
             destination = file("$buildDir/generated-pom.xml")
         }
-        tasks.publishMavenCorePublicationToMavenLocal {
+        tasks.publishMavenCheckstyleChecksPublicationToMavenLocal {
             dependsOn project.tasks.signArchives
         }
-        tasks.publishMavenCorePublicationToMavenRepository {
+        tasks.publishMavenCheckstyleChecksPublicationToMavenRepository {
             dependsOn project.tasks.signArchives
         }
     }
+}
+
+// CHECKSTLYE
+checkstyle {
+    toolVersion = "8.12"
+    configFile = file("${project.projectDir}/checkstyle/checkstyle.xml")
 }
 

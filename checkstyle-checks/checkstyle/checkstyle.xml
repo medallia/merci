@@ -19,11 +19,6 @@ limitations under the License.
     <property name="severity" value="error"/>
     <property name="charset" value="UTF-8"/>
     <module name="TreeWalker">
-        <module name="com.medallia.merci.checkstyle.checks.annotation.RequiredNullabilityAnnotationCheck">
-            <property name="id" value="nullability" />
-            <property default="warning" name="severity" value="${checkstyle.new.severity}"/>
-            <property name="includeStaticMethods" value="true"/>
-        </module>
         <module name="UnusedImports">
             <property name="processJavadoc" value="true"/>
         </module>
