@@ -49,7 +49,7 @@ public class RequiredNullabilityAnnotationCheck extends AbstractCheck {
     private static final boolean INCLUDE_LOCAL_VARIABLES_BY_DEFAULT = false;
 
     /* Default nullability annotations. */
-    private static final String[] DEFAULT_REQUIRED_ANNOTATIONS = { "Nonnull", "Nullable" };
+    private static final String[] DEFAULT_REQUIRED_ANNOTATIONS = { "Nonnull", "Nullable", "CheckForNull" };
 
     /* List of access modifiers that should be checked by default. */
     private static final String[] DEFAULT_INCLUDED_ACCESS_MODIFIERS = { "private", "protected", "public", PACKAGE_PRIVATE_ACCESS_MODIFIER };
