@@ -30,7 +30,7 @@ Merci releases can be downloaded from the Maven central repository. Adding Merci
 <dependency>
     <groupId>com.medallia.merci</groupId>
     <artifactId>merci-core</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.2</version>
     <type>pom</type>
 </dependency>
 ```
